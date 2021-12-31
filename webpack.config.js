@@ -5,7 +5,7 @@ const devMode = process.env.NODE_ENV !== 'production';
 const webpack = require('webpack');
 
 const plugins = [
-  new HtmlWebpackPlugin({ title: 'Hot Module Replacement' }),
+  new HtmlWebpackPlugin({ title: 'Minecraft' }),
   new MiniCssExtractPlugin({
     // Options similar to the same options in webpackOptions.output
     // both options are optional

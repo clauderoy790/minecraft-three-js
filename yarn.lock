@@ -201,6 +201,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/three@^0.135.0":
+  version "0.135.0"
+  resolved "http://artifactory.mheducation.com/artifactory/api/npm/npm-virtual/@types/three/-/three-0.135.0.tgz#db7f9d9699b60aba844fc5b2893adf6dd6811665"
+  integrity sha1-23+dlpm2CrqET8WyiTrfbdaBFmU=
+
 "@types/ws@^8.2.2":
   version "8.2.2"
   resolved "http://artifactory.mheducation.com/artifactory/api/npm/npm-virtual/@types/ws/-/ws-8.2.2.tgz#7c5be4decb19500ae6b3d563043cd407bf366c21"
