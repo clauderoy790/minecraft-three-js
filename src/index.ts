@@ -1,4 +1,4 @@
 const canvas = document.createElement('CANVAS');
 // canvas.setAttribute('class','canvas')
 document.body.append(canvas);
-console.log('coucou');
+console.log('salut');
