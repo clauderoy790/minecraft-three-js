@@ -1,8 +1,12 @@
 import { PerspectiveCamera, Raycaster, Vector3 } from 'three';
 import { Time } from './time';
+import { Vectors } from './vectors';
 export class Player {
-  speed = 4;
-  rotateSpeed = 2;
+  runSpeed = 4;
+  flySpeed = 4;
+  rotateSpeed = 0.5;
+  forward = new Vector3();
+  right = new Vector3();
   direction = new Vector3();
   cam: PerspectiveCamera;
   raycaster = new Raycaster();
@@ -15,6 +19,7 @@ export class Player {
     document.addEventListener('mousemove', this.onMouseMove.bind(this));
     document.addEventListener('contextmenu', this.onContextMenu.bind(this));
     document.addEventListener('mousedown', this.onMouseDown.bind(this));
+    this.calculateRotation();
   }
 
   onMouseDown(event: MouseEvent) {
@@ -38,53 +43,63 @@ export class Player {
     const val = 200;
     switch (true) {
       case event.clientX < val: {
-        this.cam.rotateOnWorldAxis(new Vector3(0,1,0),Time.deltaTime() * this.rotateSpeed)
+        this.cam.rotateY(Time.deltaTime() * this.rotateSpeed);
         break;
       }
       case event.clientX > innerWidth - val: {
-        this.cam.rotateOnWorldAxis(new Vector3(0,1,0),Time.deltaTime() * -this.rotateSpeed)
+        this.cam.rotateY(Time.deltaTime() * -this.rotateSpeed);
         break;
       }
       case event.clientY < val: {
-        this.cam.rotateOnWorldAxis(new Vector3(1,0,0),Time.deltaTime() * this.rotateSpeed)
+        this.cam.rotateX(Time.deltaTime() * this.rotateSpeed);
         break;
       }
       case event.clientY > innerHeight - val: {
-        this.cam.rotateOnWorldAxis(new Vector3(1,0,0),Time.deltaTime() * -this.rotateSpeed)
+        this.cam.rotateX(Time.deltaTime() * -this.rotateSpeed);
         break;
       }
     }
+    this.calculateRotation();
+  }
+
+  calculateRotation() {
+    this.cam.getWorldDirection(this.forward);
+    this.forward = this.forward.normalize();
+    console.log('forward:', this.forward);
+
+    this.right = this.forward.applyAxisAngle(Vectors.up, Math.PI / 2);
   }
 
   onKeyDown(event: KeyboardEvent) {
     switch (event.key) {
       case 'w': {
-        this.direction.z = -1;
+        this.direction.z = -this.runSpeed;
         break;
       }
       case 'a': {
-        this.direction.x = -1;
+        this.direction.x = -this.runSpeed;
         break;
       }
       case 's': {
-        this.direction.z = 1;
+        this.direction.z = this.runSpeed;
         break;
       }
       case 'd': {
-        this.direction.x = 1;
+        this.direction.x = this.runSpeed;
         break;
       }
       case ' ': {
-        this.direction.y = 1;
+        this.direction.y = this.flySpeed;
         break;
       }
       case 'v': {
-        this.direction.y = -1;
+        this.direction.y = -this.flySpeed;
         break;
       }
       case 'r': {
         this.cam.rotation.set(0, 0, 0);
         this.cam.position.set(0, 0, 5);
+        this.calculateRotation();
         break;
       }
     }
@@ -111,9 +126,22 @@ export class Player {
   }
 
   update() {
-    this.cam.position.add(
-      this.direction.multiplyScalar(Time.deltaTime()).multiplyScalar(this.speed)
-    );
-    this.raycaster;
+    switch (true) {
+      case this.direction.x != 0: {
+        this.cam.translateX(this.direction.x * Time.deltaTime());
+        break;
+      }
+      case this.direction.y != 0: {
+        this.cam.translateOnAxis(
+          Vectors.up,
+          this.direction.y * Time.deltaTime()
+        );
+        break;
+      }
+      case this.direction.z != 0: {
+        this.cam.translateZ(this.direction.z * Time.deltaTime());
+        break;
+      }
+    }
   }
 }

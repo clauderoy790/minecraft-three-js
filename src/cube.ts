@@ -1,5 +1,6 @@
 import { BufferAttribute, Mesh, PlaneBufferGeometry, Vector3 } from 'three';
 import { Game } from './game';
+import { Vectors } from './vectors';
 
 enum Face {
   Top = 0,
