@@ -1,13 +1,13 @@
-import { PerspectiveCamera, Raycaster, Vector3 } from 'three';
+import { PerspectiveCamera, Raycaster, Vector3, Mesh } from 'three';
+import { Game } from './game';
 import { Time } from './time';
 import { Vectors } from './vectors';
 export class Player {
   runSpeed = 4;
   flySpeed = 4;
-  rotateSpeed = 0.5;
-  forward = new Vector3();
-  right = new Vector3();
+  rotateSpeed = 1;
   direction = new Vector3();
+  forward = new Vector3();
   cam: PerspectiveCamera;
   raycaster = new Raycaster();
 
@@ -19,7 +19,6 @@ export class Player {
     document.addEventListener('mousemove', this.onMouseMove.bind(this));
     document.addEventListener('contextmenu', this.onContextMenu.bind(this));
     document.addEventListener('mousedown', this.onMouseDown.bind(this));
-    this.calculateRotation();
   }
 
   onMouseDown(event: MouseEvent) {
@@ -59,15 +58,7 @@ export class Player {
         break;
       }
     }
-    this.calculateRotation();
-  }
-
-  calculateRotation() {
     this.cam.getWorldDirection(this.forward);
-    this.forward = this.forward.normalize();
-    console.log('forward:', this.forward);
-
-    this.right = this.forward.applyAxisAngle(Vectors.up, Math.PI / 2);
   }
 
   onKeyDown(event: KeyboardEvent) {
@@ -99,7 +90,7 @@ export class Player {
       case 'r': {
         this.cam.rotation.set(0, 0, 0);
         this.cam.position.set(0, 0, 5);
-        this.calculateRotation();
+        this.cam.getWorldDirection(this.forward);
         break;
       }
     }
@@ -142,6 +133,13 @@ export class Player {
         this.cam.translateZ(this.direction.z * Time.deltaTime());
         break;
       }
+    }
+    this.raycaster.set(this.cam.position, this.forward);
+    const intersects = this.raycaster.intersectObjects(Game.scene.children);
+
+    // todo continue
+    for (let i = 0; i < intersects.length; i++) {
+      const m = intersects[ i ].object as any
     }
   }
 }
