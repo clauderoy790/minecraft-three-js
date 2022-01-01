@@ -34,7 +34,9 @@ export class Game {
     const light = new AmbientLight();
     Game.scene.add(light);
     this.loadTexture();
+    this.cubes.push(new Cube(1,0,0));
     this.cubes.push(new Cube());
+    this.cubes.push(new Cube(0,1,0));
   }
 
   loadTexture() {

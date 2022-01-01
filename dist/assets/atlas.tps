@@ -179,6 +179,7 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">dirt.png</key>
             <key type="filename">grass-side.png</key>
             <key type="filename">grass.png</key>
             <struct type="IndividualSpriteSettings">

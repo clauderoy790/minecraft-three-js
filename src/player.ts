@@ -1,10 +1,11 @@
-import { PerspectiveCamera, Vector3 } from 'three';
+import { PerspectiveCamera, Raycaster, Vector3 } from 'three';
 import { Time } from './time';
 export class Player {
   speed = 4;
   rotateSpeed = 2;
   direction = new Vector3();
   cam: PerspectiveCamera;
+  raycaster = new Raycaster();
 
   constructor() {
     this.cam = new PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 2000);
@@ -12,24 +13,44 @@ export class Player {
     document.addEventListener('keydown', this.onKeyDown.bind(this));
     document.addEventListener('keyup', this.onKeyUp.bind(this));
     document.addEventListener('mousemove', this.onMouseMove.bind(this));
+    document.addEventListener('contextmenu', this.onContextMenu.bind(this));
+    document.addEventListener('mousedown', this.onMouseDown.bind(this));
   }
+
+  onMouseDown(event: MouseEvent) {
+    switch (event.button) {
+      case 0: {
+        // todo remove block
+        break;
+      }
+      case 2: {
+        // todo put block
+        break;
+      }
+    }
+  }
+
+  onContextMenu(event: MouseEvent) {
+    event.preventDefault();
+  }
+
   onMouseMove(event: MouseEvent) {
     const val = 200;
     switch (true) {
       case event.clientX < val: {
-        this.cam.rotation.y += Time.deltaTime() * this.rotateSpeed;
+        this.cam.rotateOnWorldAxis(new Vector3(0,1,0),Time.deltaTime() * this.rotateSpeed)
         break;
       }
       case event.clientX > innerWidth - val: {
-        this.cam.rotation.y -= Time.deltaTime() * this.rotateSpeed;
+        this.cam.rotateOnWorldAxis(new Vector3(0,1,0),Time.deltaTime() * -this.rotateSpeed)
         break;
       }
       case event.clientY < val: {
-        this.cam.rotation.x += Time.deltaTime() * this.rotateSpeed;
+        this.cam.rotateOnWorldAxis(new Vector3(1,0,0),Time.deltaTime() * this.rotateSpeed)
         break;
       }
       case event.clientY > innerHeight - val: {
-        this.cam.rotation.x -= Time.deltaTime() * this.rotateSpeed;
+        this.cam.rotateOnWorldAxis(new Vector3(1,0,0),Time.deltaTime() * -this.rotateSpeed)
         break;
       }
     }
@@ -90,6 +111,9 @@ export class Player {
   }
 
   update() {
-    this.cam.position.add(this.direction.multiplyScalar(Time.deltaTime()));
+    this.cam.position.add(
+      this.direction.multiplyScalar(Time.deltaTime()).multiplyScalar(this.speed)
+    );
+    this.raycaster;
   }
 }

@@ -1,109 +1,144 @@
-import {
-  BufferAttribute,
-  Euler,
-  Mesh,
-  PlaneBufferGeometry,
-  Vector3,
-} from 'three';
+import { BufferAttribute, Mesh, PlaneBufferGeometry, Vector3 } from 'three';
 import { Game } from './game';
 
+enum Face {
+  Top = 0,
+  Bot,
+  Back,
+  Front,
+  Left,
+  Right,
+}
+
+enum UV {
+  Dirt = 0,
+  Dirt_Grass,
+  Grass,
+}
+
 export class Cube {
-  static dirt_grass: number[] = [0, 1, 0.5, 1, 0.5, 0, 0, 0];
-  static grass: number[] = [0.5, 1, 1, 1, 1, 0, 0.5, 0];
-  rot: Euler = new Euler();
+  static cubes: Map<string, Cube> = new Map<string, Cube>();
+  static uvs: number[][] = [
+    [0, 1, 1 / 3, 1, 1 / 3, 0, 0, 0], // Dirt
+    [1 / 3, 1, 2 / 3, 1, 2 / 3, 0, 1 / 3, 0], // Dirt_Grass
+    [2 / 3, 1, 1, 1, 1, 0, 2 / 3, 0], // Grass
+  ];
   pos: Vector3 = new Vector3();
   meshes: Mesh[] = [];
   size: number = 1;
-
-  get rotation(): Euler {
-    return this.rot;
-  }
-
-  set rotation(eu: Euler) {
-    console.log('set rot to: ', eu);
-
-    this.rot = eu;
-    // top
-    this.meshes[0].rotation.x = (-Math.PI / 2) +eu.x;
-    // bot
-    this.meshes[1].rotation.x = (Math.PI / 2) +eu.x;
-    // back
-    this.meshes[2].rotation.y = Math.PI + eu.y;
-    // front
-    this.meshes[3].rotation.y = eu.y
-    // left
-    this.meshes[4].rotation.y = (-Math.PI / 2)+eu.y;
-    // right
-    this.meshes[5].rotation.y = (Math.PI / 2)+eu.y;
-    // this.meshes.forEach((m) => {
-    //   m.rotation.x = eu.x;
-    //   m.rotation.y = eu.y;
-    //   m.rotation.z = eu.z;
-    // });
-  }
 
   get position(): Vector3 {
     return this.pos;
   }
 
   set position(pos: Vector3) {
-    console.log({ pos, meshes: this.meshes });
-
     this.pos = pos;
-    console.log({ pos, topPos: this.meshes[0].position });
 
-    // top
-    this.meshes[0].position.set(
+    this.meshes[Face.Top].position.set(
       this.pos.x,
       this.pos.y + this.size / 2,
       this.pos.z
     );
-    // bot
-    this.meshes[1].position.set(
+    this.meshes[Face.Bot].position.set(
       this.pos.x,
       this.pos.y - this.size / 2,
       this.pos.z
     );
-    // back
-    this.meshes[2].position.set(
+    this.meshes[Face.Back].position.set(
       this.pos.x,
       this.pos.y,
       this.pos.z - this.size / 2
     );
-    console.log('before: ');
-
-    // front
-    this.meshes[3].position.set(
+    this.meshes[Face.Front].position.set(
       this.pos.x,
       this.pos.y,
       this.pos.z + this.size / 2
     );
-    // left
-    this.meshes[4].position.set(
+    this.meshes[Face.Left].position.set(
       this.pos.x - this.size / 2,
       this.pos.y,
       this.pos.z
     );
-    // right
-    this.meshes[5].position.set(
+    this.meshes[Face.Right].position.set(
       this.pos.x + this.size / 2,
       this.pos.y,
       this.pos.z
     );
   }
 
-  constructor() {
+  constructor(x: number = 0, y: number = 0, z: number = 0) {
     for (let i = 0; i < 6; i++) {
       const geometry = new PlaneBufferGeometry(this.size, this.size);
-      const uvs = new Float32Array(i % 2 == 0 ? Cube.dirt_grass : Cube.grass);
+      let uvs: Float32Array;
+      switch (i) {
+        case Face.Top: {
+          uvs = new Float32Array(Cube.uvs[UV.Grass]);
+          break;
+        }
+        case Face.Bot: {
+          uvs = new Float32Array(Cube.uvs[UV.Dirt]);
+          break;
+        }
+        default: {
+          uvs = new Float32Array(Cube.uvs[UV.Dirt_Grass]);
+          break;
+        }
+      }
       geometry.setAttribute('uv', new BufferAttribute(uvs, 2));
       geometry.attributes.uv.needsUpdate = true;
       const m = new Mesh(geometry, Game.mat);
       Game.scene.add(m);
       this.meshes.push(m);
     }
-    this.position = this.pos;
-    this.rotation = this.rot;
+    this.setRotation();
+    this.position = new Vector3(x, y, z);
+
+    if (Cube.cubes.get(JSON.stringify(this.position))) {
+      console.error('there is already a cube at position: ', this.position);
+      return;
+    }
+
+    Cube.cubes.set(JSON.stringify(this.position), this);
+    if (this.cubeOver()) {
+      this.changeSideToDirt();
+    } else if (this.cubeUnder()) {
+      const under = this.cubeUnder();
+      under.changeSideToDirt();
+    }
+  }
+
+  cubeOver(): Cube {
+    return Cube.cubes.get(
+      JSON.stringify(
+        new Vector3(this.position.x, this.position.y + 1, this.position.z)
+      )
+    );
+  }
+
+  cubeUnder(): Cube {
+    return Cube.cubes.get(
+      JSON.stringify(
+        new Vector3(this.position.x, this.position.y - 1, this.position.z)
+      )
+    );
+  }
+
+  setRotation() {
+    this.meshes[Face.Top].rotation.x = -Math.PI / 2;
+    this.meshes[Face.Bot].rotation.x = Math.PI / 2;
+    this.meshes[Face.Back].rotation.y = Math.PI;
+    this.meshes[Face.Left].rotation.y = -Math.PI / 2;
+    this.meshes[Face.Right].rotation.y = Math.PI / 2;
+  }
+
+  changeSideToDirt() {
+    this.meshes.forEach((m, i) => {
+      if (![Face.Top, Face.Bot].includes(i)) {
+        const uvs = new Float32Array(Cube.uvs[UV.Dirt]);
+        m.geometry.setAttribute('uv', new BufferAttribute(uvs, 2));
+        m.geometry.attributes.uv.needsUpdate = true;
+      }
+    });
   }
 
   update() {
